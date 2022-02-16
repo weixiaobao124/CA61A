@@ -1,429 +1,262 @@
-HW_SOURCE_FILE = __file__
+def make_bank(balance):
+    """Returns a bank function with a starting balance. Supports
+    withdrawals and deposits.
 
-
-def mobile(left, right):
-    """Construct a mobile from a left arm and a right arm."""
-    assert is_arm(left), "left must be a arm"
-    assert is_arm(right), "right must be a arm"
-    return ['mobile', left, right]
-
-
-def is_mobile(m):
-    """Return whether m is a mobile."""
-    return type(m) == list and len(m) == 3 and m[0] == 'mobile'
-
-
-def left(m):
-    """Select the left arm of a mobile."""
-    assert is_mobile(m), "must call left on a mobile"
-    return m[1]
-
-
-def right(m):
-    """Select the right arm of a mobile."""
-    assert is_mobile(m), "must call right on a mobile"
-    return m[2]
-
-
-def arm(length, mobile_or_planet):
-    """Construct a arm: a length of rod with a mobile or planet at the end."""
-    assert is_mobile(mobile_or_planet) or is_planet(mobile_or_planet)
-    return ['arm', length, mobile_or_planet]
-
-
-def is_arm(s):
-    """Return whether s is a arm."""
-    return type(s) == list and len(s) == 3 and s[0] == 'arm'
-
-
-def length(s):
-    """Select the length of a arm."""
-    assert is_arm(s), "must call length on a arm"
-    return s[1]
-
-
-def end(s):
-    """Select the mobile or planet hanging at the end of a arm."""
-    assert is_arm(s), "must call end on a arm"
-    return s[2]
-
-
-def planet(size):
-    """Construct a planet of some size."""
-    assert size > 0
-    return ['planet', size]
-
-def size(w):
-    """Select the size of a planet."""
-    assert is_planet(w), 'must call size on a planet'
-    "*** YOUR CODE HERE ***"
-    return w[1]
-
-def is_planet(w):
-    """Whether w is a planet."""
-    return type(w) == list and len(w) == 2 and w[0] == 'planet'
-
-
-def examples():
-    t = mobile(arm(1, planet(2)),
-               arm(2, planet(1)))
-    u = mobile(arm(5, planet(1)),
-               arm(1, mobile(arm(2, planet(3)),
-                              arm(3, planet(2)))))
-    v = mobile(arm(4, t), arm(2, u))
-    return (t, u, v)
-
-
-def total_weight(m):
-    """Return the total weight of m, a planet or mobile.
-
-    >>> t, u, v = examples()
-    >>> total_weight(t)
-    3
-    >>> total_weight(u)
-    6
-    >>> total_weight(v)
-    9
-    >>> from construct_check import check
-    >>> # checking for abstraction barrier violations by banning indexing
-    >>> check(HW_SOURCE_FILE, 'total_weight', ['Index'])
-    True
+    >>> bank = make_bank(100)
+    >>> bank('withdraw', 40)    # 100 - 40
+    60
+    >>> bank('hello', 500)      # Invalid message passed in
+    'Invalid message'
+    >>> bank('deposit', 20)     # 60 + 20
+    80
+    >>> bank('withdraw', 90)    # 80 - 90; not enough money
+    'Insufficient funds'
+    >>> bank('deposit', 100)    # 80 + 100
+    180
+    >>> bank('goodbye', 0)      # Invalid message passed in
+    'Invalid message'
+    >>> bank('withdraw', 60)    # 180 - 60
+    120
     """
-    if is_planet(m):
-        return size(m)
-    else:
-        assert is_mobile(m), "must get total weight of a mobile or a planet"
-        return total_weight(end(left(m))) + total_weight(end(right(m)))
-
-
-def balanced(m):
-    """Return whether m is balanced.
-
-    >>> t, u, v = examples()
-    >>> balanced(t)
-    True
-    >>> balanced(v)
-    True
-    >>> w = mobile(arm(3, t), arm(2, u))
-    >>> balanced(w)
-    False
-    >>> balanced(mobile(arm(1, v), arm(1, w)))
-    False
-    >>> balanced(mobile(arm(1, w), arm(1, v)))
-    False
-    >>> from construct_check import check
-    >>> # checking for abstraction barrier violations by banning indexing
-    >>> check(HW_SOURCE_FILE, 'balanced', ['Index'])
-    True
-    """
-    "*** YOUR CODE HERE ***"
-    if is_planet(m):
-        return True
-    if not balanced(end(left(m))):
-        return False
-    if not balanced(end(right(m))):
-        return False
-
-    l = total_weight(end(left(m)))
-    r = total_weight(end(right(m)))
-    return l * length(left(m)) == r * length(right(m))
-
-
-def totals_tree(m):
-    """Return a tree representing the mobile with its total weight at the root.
-
-    >>> t, u, v = examples()
-    >>> print_tree(totals_tree(t))
-    3
-      2
-      1
-    >>> print_tree(totals_tree(u))
-    6
-      1
-      5
-        3
-        2
-    >>> print_tree(totals_tree(v))
-    9
-      3
-        2
-        1
-      6
-        1
-        5
-          3
-          2
-    >>> from construct_check import check
-    >>> # checking for abstraction barrier violations by banning indexing
-    >>> check(HW_SOURCE_FILE, 'totals_tree', ['Index'])
-    True
-    """
-    "*** YOUR CODE HERE ***"
-    if (is_planet(m)):
-        return tree(size(m))
-    w = total_weight(m)
-    return tree(w, [totals_tree(end(left(m))), totals_tree(end(right(m)))])
-
-
-def replace_loki_at_leaf(t, lokis_replacement):
-    """Returns a new tree where every leaf value equal to "loki" has
-    been replaced with lokis_replacement.
-
-    >>> yggdrasil = tree('odin',
-    ...                  [tree('balder',
-    ...                        [tree('loki'),
-    ...                         tree('freya')]),
-    ...                   tree('frigg',
-    ...                        [tree('loki')]),
-    ...                   tree('loki',
-    ...                        [tree('sif'),
-    ...                         tree('loki')]),
-    ...                   tree('loki')])
-    >>> laerad = copy_tree(yggdrasil) # copy yggdrasil for testing purposes
-    >>> print_tree(replace_loki_at_leaf(yggdrasil, 'freya'))
-    odin
-      balder
-        freya
-        freya
-      frigg
-        freya
-      loki
-        sif
-        freya
-      freya
-    >>> laerad == yggdrasil # Make sure original tree is unmodified
-    True
-    """
-    "*** YOUR CODE HERE ***"
-    if is_leaf(t):
-        if label(t) == 'loki':
-            return tree(lokis_replacement)
+    def bank(message, amount):
+        nonlocal balance
+        if message == 'deposit':
+            balance += amount
+        elif message == 'withdraw':
+            if balance < amount:
+                return 'Insufficient funds'
+            balance -= amount
         else:
-            return tree(label(t))
+            return 'Invalid message'
+        return balance
 
-    branch = [replace_loki_at_leaf(i, lokis_replacement) for i in branches(t)]
-    return tree(label(t), branch)
-
-
-def has_path(t, word):
-    """Return whether there is a path in a tree where the entries along the path
-    spell out a particular word.
-
-    >>> greetings = tree('h', [tree('i'),
-    ...                        tree('e', [tree('l', [tree('l', [tree('o')])]),
-    ...                                   tree('y')])])
-    >>> print_tree(greetings)
-    h
-      i
-      e
-        l
-          l
-            o
-        y
-    >>> has_path(greetings, 'h')
-    True
-    >>> has_path(greetings, 'i')
-    False
-    >>> has_path(greetings, 'hi')
-    True
-    >>> has_path(greetings, 'hello')
-    True
-    >>> has_path(greetings, 'hey')
-    True
-    >>> has_path(greetings, 'bye')
-    False
-    >>> has_path(greetings, 'hint')
-    False
-    """
-    assert len(word) > 0, 'no path for empty word.'
-    
-    if word[0] == label(t):
-        if len(word) == 1:
-            return True
-        for b in branches(t):
-            if has_path(b, word[1:]):
-                 return True
-    return False
-
-def preorder(t):
-    """Return a list of the entries in this tree in the order that they
-    would be visited by a preorder traversal (see problem description).
-
-    >>> numbers = tree(1, [tree(2), tree(3, [tree(4), tree(5)]), tree(6, [tree(7)])])
-    >>> preorder(numbers)
-    [1, 2, 3, 4, 5, 6, 7]
-    >>> preorder(tree(2, [tree(4, [tree(6)])]))
-    [2, 4, 6]
-    """
-    "*** YOUR CODE HERE ***"
-    if is_leaf(t):
-        return [label(t)]
-    
-    sum = [label(t)]
-    for b in branches(t):
-        sum = sum + preorder(b)
-    return sum
+    return bank
 
 
-def str_interval(x):
-    """Return a string representation of interval x."""
-    return '{0} to {1}'.format(lower_bound(x), upper_bound(x))
+def make_withdraw(balance, password):
+    """Return a password-protected withdraw function.
 
-
-def add_interval(x, y):
-    """Return an interval that contains the sum of any value in interval x and
-    any value in interval y."""
-    lower = lower_bound(x) + lower_bound(y)
-    upper = upper_bound(x) + upper_bound(y)
-    return interval(lower, upper)
-
-
-def interval(a, b):
-    """Construct an interval from a to b."""
-    assert a <= b, 'Lower bound cannot be greater than upper bound'
-    return [a, b]
-
-
-def lower_bound(x):
-    """Return the lower bound of interval x."""
-    "*** YOUR CODE HERE ***"
-
-
-def upper_bound(x):
-    """Return the upper bound of interval x."""
-    "*** YOUR CODE HERE ***"
-
-
-def str_interval(x):
-    """Return a string representation of interval x."""
-    return '{0} to {1}'.format(lower_bound(x), upper_bound(x))
-
-
-def add_interval(x, y):
-    """Return an interval that contains the sum of any value in interval x and
-    any value in interval y."""
-    lower = lower_bound(x) + lower_bound(y)
-    upper = upper_bound(x) + upper_bound(y)
-    return interval(lower, upper)
-
-
-def mul_interval(x, y):
-    """Return the interval that contains the product of any value in x and any
-    value in y."""
-    p1 = x[0] * y[0]
-    p2 = x[0] * y[1]
-    p3 = x[1] * y[0]
-    p4 = x[1] * y[1]
-    return [min(p1, p2, p3, p4), max(p1, p2, p3, p4)]
-
-
-def sub_interval(x, y):
-    """Return the interval that contains the difference between any value in x
-    and any value in y."""
-    "*** YOUR CODE HERE ***"
-
-
-def div_interval(x, y):
-    """Return the interval that contains the quotient of any value in x divided by
-    any value in y. Division is implemented as the multiplication of x by the
-    reciprocal of y."""
-    "*** YOUR CODE HERE ***"
-    reciprocal_y = interval(1 / upper_bound(y), 1 / lower_bound(y))
-    return mul_interval(x, reciprocal_y)
-
-
-def par1(r1, r2):
-    return div_interval(mul_interval(r1, r2), add_interval(r1, r2))
-
-
-def par2(r1, r2):
-    one = interval(1, 1)
-    rep_r1 = div_interval(one, r1)
-    rep_r2 = div_interval(one, r2)
-    return div_interval(one, add_interval(rep_r1, rep_r2))
-
-
-def check_par():
-    """Return two intervals that give different results for parallel resistors.
-
-    >>> r1, r2 = check_par()
-    >>> x = par1(r1, r2)
-    >>> y = par2(r1, r2)
-    >>> lower_bound(x) != lower_bound(y) or upper_bound(x) != upper_bound(y)
+    >>> w = make_withdraw(100, 'hax0r')
+    >>> w(25, 'hax0r')
+    75
+    >>> error = w(90, 'hax0r')
+    >>> error
+    'Insufficient funds'
+    >>> error = w(25, 'hwat')
+    >>> error
+    'Incorrect password'
+    >>> new_bal = w(25, 'hax0r')
+    >>> new_bal
+    50
+    >>> w(75, 'a')
+    'Incorrect password'
+    >>> w(10, 'hax0r')
+    40
+    >>> w(20, 'n00b')
+    'Incorrect password'
+    >>> w(10, 'hax0r')
+    "Frozen account. Attempts: ['hwat', 'a', 'n00b']"
+    >>> w(10, 'l33t')
+    "Frozen account. Attempts: ['hwat', 'a', 'n00b']"
+    >>> type(w(10, 'l33t')) == str
     True
     """
-    r1 = interval(1, 1)  # Replace this line!
-    r2 = interval(1, 1)  # Replace this line!
-    return r1, r2
+    s = []
+    def fun(amount, passw):
+        nonlocal s
+        nonlocal balance
+        nonlocal password
+        if len(s) > 2:
+            return "Frozen account. Attempts: " + str(s)
+        elif passw != password:
+            s.append(passw)
+            return 'Incorrect password'
+        elif amount > balance:
+            return 'Insufficient funds'
+        balance -= amount
+        return balance
+    return fun
 
 
-# Tree ADT
 
-def tree(label, branches=[]):
-    """Construct a tree with the given label value and a list of branches."""
-    for branch in branches:
-        assert is_tree(branch), 'branches must be trees'
-    return [label] + list(branches)
+def repeated(t, k):
+    """Return the first value in iterator T that appears K times in a row. Iterate through the items such that
+    if the same iterator is passed into repeated twice, it continues in the second call at the point it left off
+    in the first.
 
-
-def label(tree):
-    """Return the label value of a tree."""
-    return tree[0]
-
-
-def branches(tree):
-    """Return the list of branches of the given tree."""
-    return tree[1:]
-
-
-def is_tree(tree):
-    """Returns True if the given tree is a tree, and False otherwise."""
-    if type(tree) != list or len(tree) < 1:
-        return False
-    for branch in branches(tree):
-        if not is_tree(branch):
-            return False
-    return True
-
-
-def is_leaf(tree):
-    """Returns True if the given tree's list of branches is empty, and False
-    otherwise.
-    """
-    return not branches(tree)
-
-
-def print_tree(t, indent=0):
-    """Print a representation of this tree in which each node is
-    indented by two spaces times its depth from the root.
-
-    >>> print_tree(tree(1))
-    1
-    >>> print_tree(tree(1, [tree(2)]))
-    1
-      2
-    >>> numbers = tree(1, [tree(2), tree(3, [tree(4), tree(5)]), tree(6, [tree(7)])])
-    >>> print_tree(numbers)
-    1
-      2
-      3
-        4
-        5
-      6
-        7
-    """
-    print('  ' * indent + str(label(t)))
-    for b in branches(t):
-        print_tree(b, indent + 1)
-
-
-def copy_tree(t):
-    """Returns a copy of t. Only for testing purposes.
-
-    >>> t = tree(5)
-    >>> copy = copy_tree(t)
-    >>> t = tree(6)
-    >>> print_tree(copy)
+    >>> s = iter([10, 9, 10, 9, 9, 10, 8, 8, 8, 7])
+    >>> repeated(s, 2)
+    9
+    >>> s2 = iter([10, 9, 10, 9, 9, 10, 8, 8, 8, 7])
+    >>> repeated(s2, 3)
+    8
+    >>> s = iter([3, 2, 2, 2, 1, 2, 1, 4, 4, 5, 5, 5])
+    >>> repeated(s, 3)
+    2
+    >>> repeated(s, 3)
     5
+    >>> s2 = iter([4, 1, 6, 6, 7, 7, 8, 8, 2, 2, 2, 5])
+    >>> repeated(s2, 3)
+    2
     """
-    return tree(label(t), [copy_tree(b) for b in branches(t)])
+    assert k > 1
+    "*** YOUR CODE HERE ***"
+    cnt = 1
+    last = next(t)
+    while (True):
+        n = next(t)
+        if last == n:
+            cnt += 1
+            if cnt == k:
+                return n
+        else:
+            cnt = 1
+        last = n
+
+
+
+
+def permutations(seq):
+    """Generates all permutations of the given sequence. Each permutation is a
+    list of the elements in SEQ in a different order. The permutations may be
+    yielded in any order.
+
+    >>> perms = permutations([100])
+    >>> type(perms)
+    <class 'generator'>
+    >>> next(perms)
+    [100]
+    >>> try: #this piece of code prints "No more permutations!" if calling next would cause an error
+    ...     next(perms)
+    ... except StopIteration:
+    ...     print('No more permutations!')
+    No more permutations!
+    >>> sorted(permutations([1, 2, 3])) # Returns a sorted list containing elements of the generator
+    [[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]
+    >>> sorted(permutations((10, 20, 30)))
+    [[10, 20, 30], [10, 30, 20], [20, 10, 30], [20, 30, 10], [30, 10, 20], [30, 20, 10]]
+    >>> sorted(permutations("ab"))
+    [['a', 'b'], ['b', 'a']]
+    """
+    "*** YOUR CODE HERE ***"
+    if len(seq) == 1:
+        yield [seq[0]]
+    else:
+        for i in range(len(seq)):  
+            lst = seq[:i] + seq[i+1:]
+            a = seq[i]
+
+            for item in permutations(lst):
+                yield [a] + item            
+            i += 1
+
+
+def make_joint(withdraw, old_pass, new_pass):
+    """Return a password-protected withdraw function that has joint access to
+    the balance of withdraw.
+
+    >>> w = make_withdraw(100, 'hax0r')
+    >>> w(25, 'hax0r')
+    75
+    >>> make_joint(w, 'my', 'secret')
+    'Incorrect password'
+    >>> j = make_joint(w, 'hax0r', 'secret')
+    >>> w(25, 'secret')
+    'Incorrect password'
+    >>> j(25, 'secret')
+    50
+    >>> j(25, 'hax0r')
+    25
+    >>> j(100, 'secret')
+    'Insufficient funds'
+
+    >>> j2 = make_joint(j, 'secret', 'code')
+    >>> j2(5, 'code')
+    20
+    >>> j2(5, 'secret')
+    15
+    >>> j2(5, 'hax0r')
+    10
+
+    >>> j2(25, 'password')
+    'Incorrect password'
+    >>> j2(5, 'secret')
+    "Frozen account. Attempts: ['my', 'secret', 'password']"
+    >>> j(5, 'secret')
+    "Frozen account. Attempts: ['my', 'secret', 'password']"
+    >>> w(5, 'hax0r')
+    "Frozen account. Attempts: ['my', 'secret', 'password']"
+    >>> make_joint(w, 'hax0r', 'hello')
+    "Frozen account. Attempts: ['my', 'secret', 'password']"
+    """
+    "*** YOUR CODE HERE ***"
+    n = withdraw(0, old_pass)
+    if type(n) == str:
+        return n
+    def f(amount, input):
+        if input == new_pass:
+            return withdraw(amount, old_pass)
+        else:
+            return withdraw(amount, input)
+    return f
+
+
+def remainders_generator(m):
+    """
+    Yields m generators. The ith yielded generator yields natural numbers whose
+    remainder is i when divided by m.
+
+    >>> import types
+    >>> [isinstance(gen, types.GeneratorType) for gen in remainders_generator(5)]
+    [True, True, True, True, True]
+    >>> remainders_four = remainders_generator(4)
+    >>> for i in range(4):
+    ...     print("First 3 natural numbers with remainder {0} when divided by 4:".format(i))
+    ...     gen = next(remainders_four)
+    ...     for _ in range(3):
+    ...         print(next(gen))
+    First 3 natural numbers with remainder 0 when divided by 4:
+    4
+    8
+    12
+    First 3 natural numbers with remainder 1 when divided by 4:
+    1
+    5
+    9
+    First 3 natural numbers with remainder 2 when divided by 4:
+    2
+    6
+    10
+    First 3 natural numbers with remainder 3 when divided by 4:
+    3
+    7
+    11
+    """
+    "*** YOUR CODE HERE ***"
+    def func(t):
+        if t == 0:
+            for i in naturals():
+                yield t+i*m
+        else:
+            for i in naturals():
+                yield t+(i-1)*m
+    for j in range(m):
+        yield func(j)
+ 
+
+
+def naturals():
+    """A generator function that yields the infinite sequence of natural
+    numbers, starting at 1.
+
+    >>> m = naturals()
+    >>> type(m)
+    <class 'generator'>
+    >>> [next(m) for _ in range(10)]
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    """
+    i = 1
+    while True:
+        yield i
+        i += 1
+
