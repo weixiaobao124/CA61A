@@ -104,6 +104,7 @@ class Ant(Insect):
 
     implemented = False  # Only implemented Ant classes should be instantiated
     food_cost = 0
+    isbuffed = False
     # ADD CLASS ATTRIBUTES HERE
 
     def __init__(self, armor=1):
@@ -333,11 +334,11 @@ class ScubaThrower(ThrowerAnt):
     is_watersafe = True
 
     def __init__(self, armor = 1):
-        self.armor = armor
-# END Problem 9
+        ThrowerAnt.__init__(self, armor)
+        # END Problem 9
 
 # BEGIN Problem EC
-class QueenAnt(Ant):  # You should change this line
+class QueenAnt(ScubaThrower):  # You should change this line
 # END Problem EC
     """The Queen of the colony. The game is over if a bee enters her place."""
 
@@ -345,12 +346,19 @@ class QueenAnt(Ant):  # You should change this line
     food_cost = 7
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem EC
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    is_watersafe = True
+    num = 0
     # END Problem EC
 
     def __init__(self, armor=1):
         # BEGIN Problem EC
-        "*** YOUR CODE HERE ***"
+        ScubaThrower.__init__(self, armor)
+        QueenAnt.num += 1
+        if QueenAnt.num == 1:
+            self.is_queen = True
+        else:
+            self.is_queen = False
         # END Problem EC
 
     def action(self, gamestate):
@@ -360,7 +368,17 @@ class QueenAnt(Ant):  # You should change this line
         Impostor queens do only one thing: reduce their own armor to 0.
         """
         # BEGIN Problem EC
-        "*** YOUR CODE HERE ***"
+        if self.is_queen == True:
+            ScubaThrower.action(self, gamestate)
+            cur = self.place.exit
+            while cur != None:
+                if cur.ant != None and cur.ant.isbuffed == False:
+                    cur.ant.isbuffed = True
+                    cur.ant.damage *= 2
+                cur = cur.exit
+        else:
+            QueenAnt.reduce_armor(self, self.armor)
+
         # END Problem EC
 
     def reduce_armor(self, amount):
@@ -368,9 +386,15 @@ class QueenAnt(Ant):  # You should change this line
         remaining, signal the end of the game.
         """
         # BEGIN Problem EC
-        "*** YOUR CODE HERE ***"
-        # END Problem EC
+        ScubaThrower.reduce_armor(self, amount)
+        if self.is_queen and self.armor <= 0:
+            bees_win()
 
+        # END Problem EC
+    def remove_from(self, place):
+        if not self.is_queen:
+            self.place = None
+            place.ant = None
 
 
 class AntRemover(Ant):
