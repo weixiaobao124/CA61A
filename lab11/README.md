@@ -12,6 +12,8 @@ reader.py
 
 
 
+expr.py
+
 paser将token转化为expr的四种类型，分别为`Literal`, `Name`, `CallExpr`, and `LambdaExpr`
 
 Literal：字面值
@@ -31,5 +33,17 @@ LambdaExpr:参数，函数体均是expr组成
 
 
 
+
+ 对于`PrimitiveFunction`，直接用传给它的参数就能计算
+
+ 对于`LambdaExpr`，需要先用实参替代形参
+
+ 因此如果能在`env`中新定义函数的话，需要用到类似`LambdaExpr`类的构造
+
+
+
+env
+
+需要新的env的地方:`LambdaExpr`，需要先用实参替代形参
 
 
