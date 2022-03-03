@@ -6,8 +6,8 @@
 ; Some utility functions that you may find useful to implement
 
 (define (zip pairs)
-  'replace-this-line)
-
+(list (map car pairs) (map cadr pairs))
+)
 
 ;; Problem 15
 ;; Returns a list of two-element lists
@@ -65,12 +65,12 @@
 (define (let-to-lambda expr)
   (cond ((atom? expr)
          ; BEGIN PROBLEM EC
-         'replace-this-line
+         expr
          ; END PROBLEM EC
          )
         ((quoted? expr)
          ; BEGIN PROBLEM EC
-         'replace-this-line
+         expr
          ; END PROBLEM EC
          )
         ((or (lambda? expr)
@@ -79,19 +79,22 @@
                (params (cadr expr))
                (body   (cddr expr)))
            ; BEGIN PROBLEM EC
-           'replace-this-line
+           (cons form (cons params (let-to-lambda body)))
            ; END PROBLEM EC
            ))
         ((let? expr)
          (let ((values (cadr expr))
                (body   (cddr expr)))
            ; BEGIN PROBLEM EC
-           'replace-this-line
+           (define form (car (zip values)))
+           (define params (map let-to-lambda (cadr (zip values))))
+           (define body (map let-to-lambda body))
+           (cons (append (list 'lambda form) body) params)
            ; END PROBLEM EC
            ))
         (else
          ; BEGIN PROBLEM EC
-         'replace-this-line
+         (map let-to-lambda expr)
          ; END PROBLEM EC
          )))
 
