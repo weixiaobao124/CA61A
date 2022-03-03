@@ -5,3 +5,5 @@ __pycache__
 .ok_storage
 *.swp
 *.zip
+__main__.py
+.gitignore
