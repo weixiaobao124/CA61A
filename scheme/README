@@ -1,0 +1,7 @@
+### eval/apply
+
+- 符号(symbolp)：在env中找值
+
+
+
+Thunk： https://wudaijun.com/2019/02/lazy-evaluation/
