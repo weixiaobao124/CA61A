@@ -1,6 +1,152 @@
+### 数据类型
+
+### 具体值
+
+字符串,数字，布尔值等
+
+#### symbolp符号
+
+对应具体值或自定义过程的name
+
+#### special form
+
+```python
+SPECIAL_FORMS = {
+    'and': do_and_form,
+    'begin': do_begin_form,
+    'cond': do_cond_form,
+    'define': do_define_form,
+    'if': do_if_form,
+    'lambda': do_lambda_form,
+    'let': do_let_form,
+    'or': do_or_form,
+    'quote': do_quote_form,
+    'define-macro': do_define_macro,
+    'quasiquote': do_quasiquote_form,
+    'unquote': do_unquote,
+}
+```
+
+#### Procedure
+
+lambdaProcedure
+
+BuiltinProcedure
+
+```python
+env.define('eval',
+               BuiltinProcedure(scheme_eval, True, 'eval'))
+    env.define('apply',
+               BuiltinProcedure(complete_apply, True, 'apply'))
+    env.define('load',
+               BuiltinProcedure(scheme_load, True, 'load'))
+    env.define('load-all',
+               BuiltinProcedure(scheme_load_all, True, 'load-all'))
+    env.define('procedure?',
+               BuiltinProcedure(scheme_procedurep, False, 'procedure?'))
+    env.define('map',
+               BuiltinProcedure(scheme_map, True, 'map'))
+    env.define('filter',
+               BuiltinProcedure(scheme_filter, True, 'filter'))
+    env.define('reduce',
+               BuiltinProcedure(scheme_reduce, True, 'reduce'))
+    env.define('undefined', None)
+```
+
+
+
+
+
+
+
 ### eval/apply
 
+`sheme_eval`对于不同类型
+
 - 符号(symbolp)：在env中找值
+
+- 能直接返回(self_evaluating): 直接返回
+- 运算符是`SPECIAL_FORMS`，调用对应的过程，传入参数(Pair )和env
+- 运算符是其他过程，分别用`scheme_eval`求出运算符和参数，调用`shceme_apply`
+
+
+
+`sheme_apply`
+
+- 如果是内置过程`BuiltinProcedure`,调用`Procedure`的apply方法
+- 否则`make call_frame`，创建一个调用过程的`Frame`,返回`eval_all`结果
+
+
+
+`eval all`
+
+- 对所有的参数`sheme_apply`,返回最后一个的结果。
+
+
+
+### Environments
+
+实现:class `Frame`
+
+
+
+属性：bingings(字典)
+
+​     parent(父亲的Frame)
+
+
+
+### Procedures
+
+`class BuiltinProcedure`:内置过程，调用已经实现好的fn(为对象的属性)
+
+
+
+`class LambdaProcedure`：属性为：formals参数，body过程体，env环境
+
+
+
+
+
+### Special Form
+
+- define
+
+1.定义符号，直接在env属性中的字典加
+
+2.定义过程，创建lambda过程，名字绑定创建的lambda过程
+
+
+
+- quote
+
+直接返回Pair的first
+
+
+
+- begin
+
+调用`eval_all`
+
+
+
+- lambda
+
+给定参数和过程体，构建`LambdaProcedure`返回
+
+
+
+- if，and，or，cond
+
+
+
+- let
+
+调用所在env的值，求解`let_frame`的name->value对应,`eval_all`在`let_frame`求解返回
+
+
+
+
 
 
 
