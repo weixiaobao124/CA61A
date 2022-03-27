@@ -160,11 +160,12 @@ a tail call is a call expression in a tail context:
  (if (= n 0) k
   (fac (- n 1) (* k n)) ))
 
+
+参考链接：
 Thunk： https://wudaijun.com/2019/02/lazy-evaluation/
         https://fanxiao.tech/posts/CS61A-notes/
 
-        函数的尾调用是调用这个函数本身，这就是一个尾递归
-
+函数的尾调用是调用这个函数本身，这就是一个尾递归
 以下面的scheme函数为例
 
 (define (sum n total)
