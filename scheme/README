@@ -149,5 +149,31 @@ env.define('eval',
 
 
 
+a tail call is a call expression in a tail context:
+- the last body sub-expression in a lambda expression
+- sub-expression 2 & 3 in a lambda exression
+- all non-predicate sub-expressions in a tail context cond
+- the last sub-expression in a tail context and or
+- the last sub-expression in a tail context begin
+
+(define (fac n k)
+ (if (= n 0) k
+  (fac (- n 1) (* k n)) ))
 
 Thunk： https://wudaijun.com/2019/02/lazy-evaluation/
+        https://fanxiao.tech/posts/CS61A-notes/
+
+        函数的尾调用是调用这个函数本身，这就是一个尾递归
+
+以下面的scheme函数为例
+
+(define (sum n total)
+      	(if (zero? n) total
+        (sum (- n 1) (+ n total))))
+
+(sum 1001 0)
+开启了尾递归优化的情况下：在对(sum 1001 0)进行求值时，对sum进行eval，因为sum在env中已经被定义，因此替换为前面的define的LambdaProcedure对象。然后分别对1001和0进行scheme_eval后将这两个参数scheme_apply到sum这个LambdaProcedure中，此时创建了一个新的env，绑定参数为{n:1001, total:0}，父环境为global，然后对sum函数体中的所有表达式（就只有1个）进行eval_all，而因为这个表达式的rest为nil，因此是在tail context中的，会返回一个Thunk，其环境为{n:1001, total:0}，表达式为sum的body，此时将返回到最开始的(sum 1001 0)的eval的循环中，因为返回的是一个Thunk，因此还需要对这个Thunk进行求值
+
+对Thunk调用eval，最先解析的是if表达式，跳转到do_if_form，判断(zero? n)，发现应当跳转到alternative表达式，注意，此时的alternative表达式处在tail context中，因此不会立即进行求值跳转到新的栈帧，而是会返回一个Thunk，这个Thunk的环境还是父环境为global，表达式为(sum (- n 1) (+ n total))，再次返回到global环境中
+
+因为返回的还是Thunk，因此需要继续对这个Thunk进行求值，对上述表达式的所有参数进行eval之后得到对sum进行apply的参数1000和1001，然后创建一个新的子环境。注意：因为此时环境还是global，因此创建的新的环境的父环境是global，而不是之前的{n:1001, total: 0}的环境，(因为sum这个procdure的env为global，调用make_call_frame的时候，返回的子环境就是global的下一层)。这里可以看出Thunk的作用：将尾调用时的环境和参数保存，然后返回到global环境，再从global环境中对这个Thunk进行求值，这样可以避免直接在子环境中新创建另一个子环境，造成栈帧的递归
